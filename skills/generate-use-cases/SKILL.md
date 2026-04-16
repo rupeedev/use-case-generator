@@ -1,175 +1,91 @@
 ---
-description: Analyze a feature prompt and generate comprehensive use case scenarios grounded in the actual codebase. Reads UI components, hooks, API routes, and state management to produce scenarios based on what the code really does — not hypotheticals. Invoke with /use-case-generator:generate-use-cases <feature description>.
+description: Generate actionable feature scenarios grounded in the actual codebase. Reads UI components, hooks, and API routes, then produces a concise spec with acceptance criteria checkboxes that drive implementation. Invoke with /use-case-generator:generate-use-cases <feature description>.
 ---
 
 # Use Case Scenario Generator
 
-You are a senior product engineer and QA architect. Given a feature description, **read the actual code first**, then generate use case scenarios grounded in what the UI and backend really do.
+Given a feature description, **read the relevant code**, then produce a concise, actionable spec that covers all scenarios in one pass — so the feature ships complete without fix-up rounds.
 
 ## Input
 
-The user provides a feature description: `$ARGUMENTS`
+`$ARGUMENTS` — a feature description, optionally with scope or file hints.
 
-## Step 0: Read the Code (MANDATORY — before generating anything)
+Examples:
+- `GitHub OAuth connection for user settings`
+- `Document sharing — affects DocShareDialog.tsx and documents.rs`
+- `IKA-700 Team invitation system`
 
-**DO NOT generate scenarios from imagination. Ground every scenario in real code.**
+## Step 1: Read the Code (MANDATORY)
 
-1. **Find relevant files** — Search the codebase for components, hooks, routes, and stores related to the feature:
-   - Glob for component files: `src/components/**/*<feature>*`, `src/pages/**/*<feature>*`
-   - Glob for hooks: `src/hooks/*<feature>*`
-   - Grep for API calls: `useMutation`, `useQuery`, `fetch`, `axios` referencing the feature
-   - Grep for route definitions: look in route config or backend `routes/` for endpoints
-   - Grep for state/store: Zustand stores, React context, or local state related to the feature
+Before generating anything, find and read the relevant source files:
 
-2. **Read each file** — For every file found, read it and extract:
-   - **UI controls**: What buttons, forms, toggles, dropdowns exist? What do they trigger?
-   - **API calls**: What endpoints are called? What payloads are sent? What responses are handled?
-   - **State management**: What state drives conditional rendering? What loading/error/empty states exist?
-   - **Validation**: What client-side validation runs? What error messages are shown?
-   - **Permissions/guards**: What role checks, auth guards, or feature flags gate access?
-   - **Confirmation dialogs**: What destructive actions show confirmation before executing?
-   - **Toast/notifications**: What success/error feedback does the user see?
+1. **Search** — Glob/Grep for components, hooks, routes, stores matching the feature keywords
+2. **Read** — For each file, note: UI controls (buttons, forms, toggles), API calls (endpoint + method), state (loading/error/empty), guards (auth/role checks), feedback (toasts, dialogs)
+3. **Backend** — Check route handlers for validation, DB queries, authorization
 
-3. **Read backend routes** — If backend code is accessible, check:
-   - Route handler logic (what it validates, what it returns)
-   - Database queries (what tables are touched, what cascades on delete)
-   - Authorization middleware (who can access what)
+Keep this fast — read only files directly related to the feature, not the whole codebase.
 
-4. **Summarize what you found** — Before generating scenarios, output a brief "Code Audit" section listing:
-   - Files read and their purpose
-   - UI actions discovered (every clickable/submittable thing)
-   - API endpoints discovered
-   - State transitions discovered
-   - Guards/permissions discovered
+## Step 2: Generate the Spec
 
-## Step 1: Generate Scenarios from Code Evidence
-
-For each UI action, API call, and state transition discovered in Step 0, generate scenarios across these dimensions:
-   - **CRUD lifecycle**: Which of Create, Read, Update, Delete does the code actually implement?
-   - **Scope**: Does the code scope to User/Project/Team/Org? Only include scopes the code handles.
-   - **Permissions**: What role checks exist in the code? Only include roles the code validates.
-   - **State transitions**: What state changes does the code manage? (e.g., `isConnected` toggle, `status` enum)
-   - **Data volume**: Does the code paginate? Handle empty arrays? Show "no results" states?
-   - **Concurrency**: Does the code use optimistic updates? Invalidate queries? Handle stale data?
-
-**Every scenario must reference the source** — which component, hook, or route it comes from.
-
-Mark each as P0 (must-have), P1 (should-have), P2 (nice-to-have).
-
-## Output Format
-
-Generate a structured markdown document with this exact format:
+Output this format — **keep it tight, no filler**:
 
 ```markdown
-# Use Cases: [Feature Name]
+# Feature Spec: [Name]
 
 ## Code Audit
 
-**Files read:**
-- `src/components/settings/GitHubConnectionPanel.tsx` — Connect/disconnect buttons, status badge
-- `src/hooks/useGitHubConnection.ts` — useMutation for POST /api/oauth/github, disconnect DELETE
-- `src/routes/settings.rs` — Auth guard: workspace owner only
-- ...
-
-**UI actions discovered:**
-- [Button] "Connect GitHub" → opens OAuth popup → callback stores token
-- [Button] "Disconnect" → confirmation dialog → DELETE /api/oauth/github/{id}
-- [Badge] Shows "Connected" / "Not connected" based on `connection.status`
-- ...
-
-**API endpoints:**
-- `POST /api/oauth/github/connect` — initiates OAuth flow
-- `DELETE /api/oauth/github/{id}` — revokes connection
-- ...
-
-**State transitions:**
-- `not_connected → connecting → connected → disconnecting → not_connected`
-- ...
-
-## Summary
-- **Core entity:** [what is being acted on]
-- **Primary actors:** [who interacts with this]
-- **Scope dimensions:** [only scopes found in code]
-- **Total scenarios:** [count]
+**Files:** (list each file read + one-line purpose)
+**UI actions:** (every clickable/submittable thing found)
+**API endpoints:** (method + path + what it does)
 
 ---
 
-## Category 1: Happy Path (Core CRUD)
+## SC-01: [Scenario name] — P0
+- **Entry:** [where the user starts — page, button, menu item]
+- **Source:** `file.tsx:line`
+- **Flow:**
+  1. User does X
+  2. System calls `POST /api/...`
+  3. UI updates to show Y
+- **API:** `METHOD /path` → `200 { field: value }` | `422 { error: "..." }`
+- **Accept:**
+  - [ ] [criterion — what must be true when this works]
+  - [ ] [criterion]
+- **Errors:**
+  - [ ] [what happens on failure — specific error + UI response]
 
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
-| 1 | ... | `ComponentName.tsx:42` | ... | ... | ... | ... | P0 |
+## SC-02: [Scenario name] — P0
+...
 
-## Category 2: Scope Variations
-
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
-
-## Category 3: Permission & Access Control
-
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
-
-## Category 4: State Transitions
-
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
-
-## Category 5: Edge Cases & Error Handling
-
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
-
-## Category 6: UI/UX States
-
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
-
-## Category 7: Data Integrity & Cleanup
-
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
-
-## Category 8: Security
-
-| # | Scenario | Source File | Actor | Precondition | Action | Expected Result | Priority |
-|---|----------|-----------|-------|-------------|--------|-----------------|----------|
+## SC-N: [GAP] [Missing thing] — P1
+- **Source:** `file.tsx:line` — [what exists that implies this should exist]
+- **Fix:** [one-line description of what to add]
+- **Accept:**
+  - [ ] [criterion]
 
 ---
 
-## Gaps Detected
+## Build Order
 
-Scenarios that SHOULD exist based on the code patterns but are NOT currently handled:
-- [ ] e.g., "Disconnect button exists but no confirmation dialog found in code"
-- [ ] e.g., "API returns 429 but no rate-limit error handling in the hook"
-- [ ] e.g., "Empty state: no repos linked — but no empty state UI component found"
-
-## Implementation Checklist
-
-- [ ] All P0 scenarios implemented
-- [ ] All P0 scenarios tested (manual or automated)
-- [ ] All P1 scenarios implemented
-- [ ] Edge cases have proper error messages
-- [ ] Destructive actions have confirmation dialogs
-- [ ] Empty states have helpful UI
-- [ ] All gaps from "Gaps Detected" addressed
+1. SC-01, SC-02 (core path — build these first)
+2. SC-03, SC-04 (variations — build after core works)
+3. SC-N gaps (harden — address before shipping)
 ```
 
-## Scenario Generation Rules
+## Rules
 
-1. **Code-first, not imagination-first** — Only generate scenarios for actions the code actually supports. If there's no delete button in the UI, don't invent a "delete" scenario. Instead, flag it as a gap.
-2. **Always include the inverse** — If the code has "connect," check if "disconnect" exists. If it doesn't, flag it as a gap.
-3. **Always include the empty state** — Check if the component renders an empty state when the data array is empty. If not, flag it.
-4. **Always include the destructive path** — If a delete/remove action exists in code, check for confirmation dialog. If missing, flag it.
-5. **Check error boundaries** — Does the code have `onError` callbacks? `catch` blocks? Error toast messages? If an API call has no error handling, flag it.
-6. **Check loading states** — Does the code show a spinner/skeleton during API calls? If `isLoading` is not handled, flag it.
-7. **Check optimistic updates** — Does the mutation use `onMutate` for optimistic updates? Could this cause stale UI on failure?
-8. **Reference real file:line** — Every scenario must cite the source file and approximate line number.
-9. **Real-world naming** — Use concrete names (e.g., "Sebastian clicks Disconnect on GitHub panel" not "User A performs action").
+1. **Code-first** — Only generate scenarios for actions the code supports or clearly should support. No hypotheticals.
+2. **Concise** — Each scenario should be 5-10 lines max. No tables. No redundant columns.
+3. **Acceptance criteria = checkboxes** — Every criterion is something you can verify with one action (click, curl, or look at DB).
+4. **Errors are part of the scenario, not a separate category** — Each scenario lists its own failure modes inline.
+5. **Gaps are scenarios too** — If code implies something should exist but doesn't (button with no handler, API with no error state, list with no empty state), write it as `[GAP] SC-N`.
+6. **Build order at the end** — Tell the developer what to build first so dependencies flow correctly.
+7. **Limit to ~10 scenarios max** — Focus on what matters. If the feature genuinely has 20 scenarios, split into two specs.
+8. **Cite source files** — Every scenario references the file:line it came from.
+9. **Real names** — "Sebastian clicks Disconnect" not "User A performs action."
 
 ## After Generation
 
 Ask the user:
-1. Which scenarios to prioritize for this sprint
-2. Whether any of the detected gaps should be fixed now
-3. Whether to save the use cases to a file (suggest `docs/use-cases/IKA-XXX-feature-name.md`)
+1. Any scenarios missing from your mental model?
+2. Save to `docs/use-cases/IKA-XXX-feature-name.md`?
