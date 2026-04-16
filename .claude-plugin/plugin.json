@@ -1,0 +1,12 @@
+{
+  "name": "use-case-generator",
+  "description": "Analyzes feature prompts and generates comprehensive use case scenarios — happy paths, edge cases, error handling, scope variations, and security considerations",
+  "version": "1.0.0",
+  "author": {
+    "name": "Rupesh Panwar",
+    "email": "rupeshpanwar43@gmail.com"
+  },
+  "repository": "https://github.com/rupeshpanwar/use-case-generator",
+  "license": "MIT",
+  "keywords": ["use-cases", "scenarios", "planning", "feature-analysis", "testing"]
+}
