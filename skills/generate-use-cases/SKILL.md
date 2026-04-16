@@ -84,8 +84,43 @@ Output this format — **keep it tight, no filler**:
 8. **Cite source files** — Every scenario references the file:line it came from.
 9. **Real names** — "Sebastian clicks Disconnect" not "User A performs action."
 
+## Step 3: Generate UI Mockup
+
+After the spec is generated, **automatically** create a single self-contained HTML file that visualizes every scenario's UI state. This lets the user SEE what they're building before writing code.
+
+**Invoke the `frontend-design` plugin** (or use the `playground:playground` skill as fallback) with this prompt structure:
+
+> Create a single-file HTML mockup for "[Feature Name]" with these requirements:
+>
+> **Design system:** Match the existing app — dark theme, shadcn/ui style (Tailwind classes), rounded corners, muted borders, sans-serif font.
+>
+> **Screens to show** (one section per scenario, stacked vertically with labels):
+> - SC-01 [name]: [describe the default/initial UI state]
+> - SC-01 success: [describe what the UI looks like after success]
+> - SC-01 error: [describe the error state]
+> - SC-02 [name]: [describe this state]
+> - SC-N [GAP]: [show what the missing UI should look like]
+>
+> **Requirements:**
+> - Each screen is a labeled card showing that scenario's UI state
+> - Interactive where possible (buttons toggle between states, show/hide error messages)
+> - Include empty states, loading spinners, error toasts, confirmation dialogs
+> - Use realistic data (real usernames, repo names, timestamps)
+> - No external dependencies — inline all CSS/JS
+> - Add a nav sidebar listing all scenarios for quick jump
+
+Save the HTML file to: `docs/use-cases/IKA-XXX-feature-name-mockup.html`
+
+**What each screen should capture:**
+- The exact UI controls from the code audit (buttons, forms, badges, toggles)
+- The state transitions (before → loading → after)
+- Error states with the actual error messages from the code
+- Empty states showing what users see with zero data
+- Gap states showing proposed UI for missing functionality
+
 ## After Generation
 
 Ask the user:
 1. Any scenarios missing from your mental model?
-2. Save to `docs/use-cases/IKA-XXX-feature-name.md`?
+2. Save spec to `docs/use-cases/IKA-XXX-feature-name.md`?
+3. Open the mockup HTML in browser? (`open docs/use-cases/IKA-XXX-feature-name-mockup.html`)
