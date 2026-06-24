@@ -38,6 +38,6 @@ Each scenario includes: Actor, Precondition, Action, Expected Result, and Priori
 # From Claude Code:
 /plugin install use-case-generator
 
-# Or load locally:
-claude --plugin-dir ./plugins/use-case-generator
+# Or load locally (from the cloned repo root):
+claude --plugin-dir .
 ```
